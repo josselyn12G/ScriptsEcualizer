@@ -1,4 +1,28 @@
-USE Ecualizer
+-- ============================================================
+--			     CREACIÓN DE LA BASE DE DATOS
+-- ============================================================
+
+CREATE DATABASE Ecualizer
+ON PRIMARY
+(
+    NAME = Ecualizer_Data,
+    FILENAME = 'C:\SQLData\Ecualizer_Data.mdf',
+    SIZE = 20MB,
+    MAXSIZE = 500MB,
+    FILEGROWTH = 10MB
+)
+LOG ON
+(
+    NAME = Ecualizer_Log,
+    FILENAME = 'C:\SQLData\Ecualizer_Log.ldf',
+    SIZE = 10MB,
+    MAXSIZE = 200MB,
+    FILEGROWTH = 5MB
+);
+GO
+
+-- Usar la base de datos creada
+USE Ecualizer;
 GO
 -- ============================================================
 --			     CREACIÓN DE TIPOS DE DATOS
