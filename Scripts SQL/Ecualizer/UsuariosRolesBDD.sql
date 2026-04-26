@@ -305,7 +305,8 @@ GO
 ------------------------------------------------------------
 -- PERMISOS PARA EL ROL: RolSistema
 ------------------------------------------------------------
-
+-- El sistema tiene permisos amplios ejecutar consulta
+GRANT EXECUTE ON SCHEMA::Usuario TO RolSistema;
 -- El sistema puede consultar el catálogo musical:
 -- álbumes, canciones, géneros, artistas y tipos de álbum.
 GRANT SELECT ON SCHEMA::Catalogo TO RolSistema;
