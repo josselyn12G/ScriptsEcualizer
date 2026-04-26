@@ -329,7 +329,7 @@ GO
 -- El sistema puede consultar planes, crear y actualizar suscripciones,
 -- y registrar pagos asociados.
 -- No se otorga DELETE para mantener trazabilidad financiera.
-GRANT SELECT, INSERT, UPDATE
+GRANT SELECT, INSERT, UPDATE, EXECUTE
 ON SCHEMA::Pagos TO RolSistema;
 GO
 

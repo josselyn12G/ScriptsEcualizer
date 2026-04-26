@@ -3,15 +3,12 @@
 --   Base de Datos II  |  ITIZ-2201  |  202620
 --   Equipo 6: Freire Adrián, Guevara Josselyn, Anthony Llanos
 --   Fecha: 23 de Abril de 2026
-
 -- ============================================================
 
 USE Ecualizer;
 GO
 
 SET NOCOUNT ON;
-
-
 
 -- ============================================================
 -- 1. CATALOGO.TIPOALBUM
@@ -29,11 +26,9 @@ SET IDENTITY_INSERT Catalogo.TipoAlbum OFF;
 
 -- ============================================================
 -- 2. PAGOS.TIPOPLAN
-
 -- ============================================================
 PRINT '>>> Insertando TipoPlan...';
 
--- TipoPlan también es IDENTITY
 SET IDENTITY_INSERT Pagos.TipoPlan ON;
 INSERT INTO Pagos.TipoPlan (idTipoPlan, nombrePlan, precio, descripcionPlan, duracion) VALUES
 (1, 'Free',        0.00,  'Plan gratuito con anuncios y calidad estándar',          'Mensual'),
@@ -65,7 +60,6 @@ INSERT INTO Catalogo.GeneroMusical (idGeneroMusical, nombreGenero) VALUES
 -- ============================================================
 PRINT '>>> Insertando Discografica...';
 
--- Discografica es IDENTITY
 SET IDENTITY_INSERT Industria.Discografica ON;
 INSERT INTO Industria.Discografica
     (idDiscografica, nombreDiscografica, paisOrigen, correoContacto, telefonoContacto)
@@ -79,35 +73,40 @@ SET IDENTITY_INSERT Industria.Discografica OFF;
 
 -- ============================================================
 -- 5. USUARIO.PERSONA  (20 registros: 5 artistas + 13 oyentes + 2 admins)
+-- Persona es el supertipo: contiene cédula, nombres, correo,
+-- contraseña, fecha de registro y estado.
 -- ============================================================
 PRINT '>>> Insertando Persona...';
 
+SET IDENTITY_INSERT Usuario.Persona ON;
 INSERT INTO Usuario.Persona
-    (idUsuario, alias, paisUsuario, fechaNacimiento, genero, idTipoPlan)
+    (idUsuario, cedulaUsuario, primerNombre, primerApellido,
+     correo, contrasena, fechaRegistro, estado)
 VALUES
--- Artistas (idUsuario 1-5): se les asigna plan Free (1) como base
-(1,  'duki_arg',       'Argentina',      '1996-08-29', 'M', 1),
-(2,  'rosalia_oficial','España',         '1992-09-25', 'F', 1),
-(3,  'arcticmonkeys',  'Reino Unido',    '1985-10-09', 'M', 1),
-(4,  'bad_bunny',      'Puerto Rico',    '1994-03-10', 'M', 1),
-(5,  'karol_g',        'Colombia',       '1990-02-14', 'F', 1),
+-- Artistas (idUsuario 1-5)
+(1,  '1700000001', 'Mauro',    'Lombardo',   'duki@ecualizer.com',         '$2a$10$aK9Lm1XqZ8vN3pR7sT2uO', '2022-01-01', 'activo'),
+(2,  '1700000002', 'Rosalía',  'Vila',       'rosalia@ecualizer.com',      '$2a$10$bL0Mn2YrA9wO4qS8tU3vP', '2022-01-02', 'activo'),
+(3,  '1700000003', 'Alex',     'Turner',     'arcticmonkeys@ecualizer.com','$2a$10$cM1No3ZsB0xP5rT9uV4wQ', '2022-01-03', 'activo'),
+(4,  '1700000004', 'Benito',   'Martínez',   'badbunny@ecualizer.com',     '$2a$10$dN2Op4AtC1yQ6sU0vW5xR', '2022-01-04', 'activo'),
+(5,  '1700000005', 'Carolina', 'Giraldo',    'karolg@ecualizer.com',       '$2a$10$eO3Pq5BuD2zA7tV1wX6yS', '2022-01-05', 'activo'),
 -- Oyentes (idUsuario 6-18)
-(6,  'mario.lp',       'Ecuador',        '2001-03-15', 'M', 2),
-(7,  'sofia.qs',       'Ecuador',        '1999-07-22', 'F', 3),
-(8,  'carlos.rm',      'Colombia',       '2000-11-05', 'M', 2),
-(9,  'lucia.va',       'México',         '1998-04-30', 'F', 4),
-(10, 'andres.tp',      'Perú',           '2003-09-12', 'M', 2),
-(11, 'valeria.gm',     'Chile',          '1997-06-18', 'F', 2),
-(12, 'daniel.fc',      'Venezuela',      '2002-01-25', 'M', 1),
-(13, 'isabella.sr',    'Argentina',      '2000-12-08', 'F', 5),
-(14, 'miguel.hn',      'España',         '1995-05-14', 'M', 1),
-(15, 'camila.or',      'Ecuador',        '2001-08-27', 'F', 3),
-(16, 'sebastian.vz',   'Bolivia',        '1999-02-03', 'M', 2),
-(17, 'natalia.cb',     'Uruguay',        '2004-10-19', 'F', 2),
-(18, 'josue.pm',       'Paraguay',       '1996-07-31', 'M', 2),
+(6,  '1700000006', 'Mario',    'López',      'mario.lp@gmail.com',         '$2a$10$fP4Qr6CvE3AB8uW2xY7zT', '2023-01-15', 'activo'),
+(7,  '1700000007', 'Sofia',    'Quiroz',     'sofia.qs@hotmail.com',       '$2a$10$gQ5Rs7DwF4BC9vX3yZ8AU', '2023-02-20', 'activo'),
+(8,  '1700000008', 'Carlos',   'Ramírez',    'carlos.rm@gmail.com',        '$2a$10$hR6St8ExG5CD0wY4zA9BV', '2023-03-10', 'activo'),
+(9,  '1700000009', 'Lucía',    'Vargas',     'lucia.va@outlook.com',       '$2a$10$iS7Tu9FyH6DE1xZ5AB0CW', '2023-04-05', 'activo'),
+(10, '1700000010', 'Andrés',   'Torres',     'andres.tp@gmail.com',        '$2a$10$jT8Uv0GzI7EF2yA6BC1DX', '2023-05-18', 'activo'),
+(11, '1700000011', 'Valeria',  'García',     'valeria.gm@gmail.com',       '$2a$10$kU9Vw1HaJ8FG3zB7CD2EY', '2023-06-22', 'activo'),
+(12, '1700000012', 'Daniel',   'Flores',     'daniel.fc@yahoo.com',        '$2a$10$lV0Wx2IbK9GH4AC8DE3FZ', '2023-07-30', 'activo'),
+(13, '1700000013', 'Isabella', 'Soto',       'isabella.sr@gmail.com',      '$2a$10$mW1Xy3JcL0HI5BD9EF4GA', '2023-08-14', 'activo'),
+(14, '1700000014', 'Miguel',   'Hernández',  'miguel.hn@gmail.com',        '$2a$10$nX2Yz4KdM1IJ6CE0FG5HB', '2023-09-01', 'inactivo'),
+(15, '1700000015', 'Camila',   'Ortega',     'camila.or@hotmail.com',      '$2a$10$oY3Za5LeN2JK7DF1GH6IC', '2023-10-07', 'activo'),
+(16, '1700000016', 'Sebastián','Vásquez',    'sebastian.vz@gmail.com',     '$2a$10$pZ4Ab6MfO3KL8EG2HI7JD', '2023-11-19', 'activo'),
+(17, '1700000017', 'Natalia',  'Castro',     'natalia.cb@gmail.com',       '$2a$10$qA5Bc7NgP4LM9FH3IJ8KE', '2024-01-08', 'activo'),
+(18, '1700000018', 'Josué',    'Paredes',    'josue.pm@outlook.com',       '$2a$10$rB6Cd8OhQ5MN0GI4JK9LF', '2024-02-14', 'activo'),
 -- Administradores (idUsuario 19-20)
-(19, 'admin.general',  'Ecuador',        '1985-03-10', 'M', 1),
-(20, 'admin.content',  'Ecuador',        '1990-06-25', 'F', 1);
+(19, '1700000019', 'Admin',    'General',    'admin.general@ecualizer.com','$2a$10$sC7De9PiR6NO1HJ5KL0MG', '2022-01-01', 'activo'),
+(20, '1700000020', 'Admin',    'Contenido',  'admin.content@ecualizer.com','$2a$10$tD8Ef0QjS7OP2IK6LM1NH', '2022-01-01', 'activo');
+SET IDENTITY_INSERT Usuario.Persona OFF;
 
 -- ============================================================
 -- 6. USUARIO.ARTISTA
@@ -128,32 +127,32 @@ VALUES
    'Carolina Giraldo Navarro, conocida como Karol G, es una cantante colombiana de música urbana y reggaeton. Ha sido reconocida como una de las artistas femeninas más importantes del género.');
 
 -- ============================================================
--- 7. USUARIO.USUARIO (oyentes)
+-- 7. USUARIO.USUARIO (oyentes únicamente — idUsuario 6-18)
+-- Usuario es el subtipo del oyente: contiene alias, país,
+-- fecha de nacimiento y género. Hereda idUsuario de Persona.
 -- ============================================================
 PRINT '>>> Insertando Usuario (oyentes)...';
 
--- Usuario es IDENTITY; insertar con IDENTITY_INSERT
-SET IDENTITY_INSERT Usuario.Usuario ON;
-INSERT INTO Usuario.Usuario (idUsuario, correo, contrasena, estado, fechaRegistro,
-                              cedulaUsuario, primerNombre, primerApellido)
+INSERT INTO Usuario.Usuario
+    (idUsuario, alias, paisUsuario, fechaNacimiento, genero)
 VALUES
-(6,  'mario.lp@gmail.com',     '$2a$10$aK9Lm1XqZ8vN3pR7sT2uOeY4bW5cD6fG',  'activo',    '2023-01-15', '1700000006', 'Mario',     'López'),
-(7,  'sofia.qs@hotmail.com',   '$2a$10$bL0Mn2YrA9wO4qS8tU3vPfZ5cX6dE7gH',  'activo',    '2023-02-20', '1700000007', 'Sofia',     'Quiroz'),
-(8,  'carlos.rm@gmail.com',    '$2a$10$cM1No3ZsB0xP5rT9uV4wQgA6dY7eF8hI',  'activo',    '2023-03-10', '1700000008', 'Carlos',    'Ramírez'),
-(9,  'lucia.va@outlook.com',   '$2a$10$dN2Op4AtC1yQ6sU0vW5xRhB7eZ8fG9iJ',  'activo',    '2023-04-05', '1700000009', 'Lucía',     'Vargas'),
-(10, 'andres.tp@gmail.com',    '$2a$10$eO3Pq5BuD2zA7tV1wX6ySiC8fA0gH0jK',  'activo',    '2023-05-18', '1700000010', 'Andrés',    'Torres'),
-(11, 'valeria.gm@gmail.com',   '$2a$10$fP4Qr6CvE3AB8uW2xY7zTjD9gB1hI1kL',  'activo',    '2023-06-22', '1700000011', 'Valeria',   'García'),
-(12, 'daniel.fc@yahoo.com',    '$2a$10$gQ5Rs7DwF4BC9vX3yZ8AUkE0hC2iJ2lM',  'activo',    '2023-07-30', '1700000012', 'Daniel',    'Flores'),
-(13, 'isabella.sr@gmail.com',  '$2a$10$hR6St8ExG5CD0wY4zA9BVlF1iD3jK3mN',  'activo',    '2023-08-14', '1700000013', 'Isabella',  'Soto'),
-(14, 'miguel.hn@gmail.com',    '$2a$10$iS7Tu9FyH6DE1xZ5AB0CWmG2jE4kL4nO',  'inactivo',  '2023-09-01', '1700000014', 'Miguel',    'Hernández'),
-(15, 'camila.or@hotmail.com',  '$2a$10$jT8Uv0GzI7EF2yA6BC1DXnH3kF5lM5oP',  'activo',    '2023-10-07', '1700000015', 'Camila',    'Ortega'),
-(16, 'sebastian.vz@gmail.com', '$2a$10$kU9Vw1HaJ8FG3zB7CD2EYoI4lG6mN6pQ',  'activo',    '2023-11-19', '1700000016', 'Sebastián', 'Vásquez'),
-(17, 'natalia.cb@gmail.com',   '$2a$10$lV0Wx2IbK9GH4AC8DE3FZpJ5mH7nO7qR',  'activo',    '2024-01-08', '1700000017', 'Natalia',   'Castro'),
-(18, 'josue.pm@outlook.com',   '$2a$10$mW1Xy3JcL0HI5BD9EF4GAqK6nI8oP8rS',  'activo',    '2024-02-14', '1700000018', 'Josué',     'Paredes');
-SET IDENTITY_INSERT Usuario.Usuario OFF;
+(6,  'mario.lp',    'Ecuador',   '2001-03-15', 'M'),
+(7,  'sofia.qs',    'Ecuador',   '1999-07-22', 'F'),
+(8,  'carlos.rm',   'Colombia',  '2000-11-05', 'M'),
+(9,  'lucia.va',    'México',    '1998-04-30', 'F'),
+(10, 'andres.tp',   'Perú',      '2003-09-12', 'M'),
+(11, 'valeria.gm',  'Chile',     '1997-06-18', 'F'),
+(12, 'daniel.fc',   'Venezuela', '2002-01-25', 'M'),
+(13, 'isabella.sr', 'Argentina', '2000-12-08', 'F'),
+(14, 'miguel.hn',   'España',    '1995-05-14', 'M'),
+(15, 'camila.or',   'Ecuador',   '2001-08-27', 'F'),
+(16, 'sebastian.vz','Bolivia',   '1999-02-03', 'M'),
+(17, 'natalia.cb',  'Uruguay',   '2004-10-19', 'F'),
+(18, 'josue.pm',    'Paraguay',  '1996-07-31', 'M');
 
 -- ============================================================
--- 8. USUARIO.ADMINISTRADOR
+-- 8. USUARIO.ADMINISTRADOR (idUsuario 19-20)
+-- Los administradores heredan de Persona (no de Usuario).
 -- ============================================================
 PRINT '>>> Insertando Administrador...';
 
@@ -164,46 +163,29 @@ VALUES
 
 -- ============================================================
 -- 9. CATALOGO.ALBUM
-
+-- Ahora incluye Artista_idUsuario (relación 1:N con Artista).
 -- ============================================================
 PRINT '>>> Insertando Album...';
 
 SET IDENTITY_INSERT Catalogo.Album ON;
 INSERT INTO Catalogo.Album
-    (idAlbum, tituloAlbum, fechaLanzamientoAlbum, descripcionAlbum, estadoAlbum, TipoAlbum_idTipoAlbum)
+    (idAlbum, tituloAlbum, fechaLanzamientoAlbum, descripcionAlbum,
+     estadoAlbum, TipoAlbum_idTipoAlbum, Artista_idUsuario)
 VALUES
-(1,  'Super Sangre Joven',      '2018-09-21', 'Álbum debut de Duki que consolidó el trap latino en Argentina.',                       'activo', 1),
-(2,  'Desde el Fin del Mundo',  '2021-11-05', 'Segundo álbum de Duki con colaboraciones internacionales de alto perfil.',             'activo', 1),
-(3,  'El Mal Querer',           '2018-11-02', 'Álbum conceptual de Rosalía que reimagina el flamenco en clave moderna.',             'activo', 1),
-(4,  'MOTOMAMI',                '2022-03-18', 'Tercer álbum de Rosalía, ganador del Grammy al Mejor Álbum de Música Urbana.',         'activo', 1),
-(5,  'AM',                      '2013-09-09', 'Quinto álbum de Arctic Monkeys, uno de los más influyentes del rock moderno.',         'activo', 1),
-(6,  'The Car',                 '2022-10-21', 'Séptimo álbum de Arctic Monkeys con sonido orquestal y sofisticado.',                  'activo', 1),
-(7,  'Un Verano Sin Ti',        '2022-05-06', 'Álbum de Bad Bunny que batió récords en plataformas de streaming globales.',           'activo', 1),
-(8,  'nadie sabe lo que va a pasar mañana', '2023-10-13', 'Álbum introspectivo de Bad Bunny con influencias de trap y perreo.',      'activo', 1),
-(9,  'MAÑANA SERÁ BONITO',      '2023-02-24', 'Álbum de Karol G que debutó en el número 1 del Billboard 200.',                       'activo', 1),
-(10, 'Bichota Season',          '2021-12-03', 'EP navideño de Karol G que incluye colaboraciones con grandes del reggaeton.',         'activo', 2);
+(1,  'Super Sangre Joven',               '2018-09-21', 'Álbum debut de Duki que consolidó el trap latino en Argentina.',                       'activo', 1, 1),
+(2,  'Desde el Fin del Mundo',           '2021-11-05', 'Segundo álbum de Duki con colaboraciones internacionales de alto perfil.',             'activo', 1, 1),
+(3,  'El Mal Querer',                    '2018-11-02', 'Álbum conceptual de Rosalía que reimagina el flamenco en clave moderna.',             'activo', 1, 2),
+(4,  'MOTOMAMI',                         '2022-03-18', 'Tercer álbum de Rosalía, ganador del Grammy al Mejor Álbum de Música Urbana.',         'activo', 1, 2),
+(5,  'AM',                               '2013-09-09', 'Quinto álbum de Arctic Monkeys, uno de los más influyentes del rock moderno.',         'activo', 1, 3),
+(6,  'The Car',                          '2022-10-21', 'Séptimo álbum de Arctic Monkeys con sonido orquestal y sofisticado.',                  'activo', 1, 3),
+(7,  'Un Verano Sin Ti',                 '2022-05-06', 'Álbum de Bad Bunny que batió récords en plataformas de streaming globales.',           'activo', 1, 4),
+(8,  'nadie sabe lo que va a pasar mañana','2023-10-13','Álbum introspectivo de Bad Bunny con influencias de trap y perreo.',                 'activo', 1, 4),
+(9,  'MAÑANA SERÁ BONITO',               '2023-02-24', 'Álbum de Karol G que debutó en el número 1 del Billboard 200.',                       'activo', 1, 5),
+(10, 'Bichota Season',                   '2021-12-03', 'EP navideño de Karol G que incluye colaboraciones con grandes del reggaeton.',         'activo', 2, 5);
 SET IDENTITY_INSERT Catalogo.Album OFF;
 
 -- ============================================================
--- 10. CATALOGO.ARTISTAALBUM
--- ============================================================
-PRINT '>>> Insertando ArtistaAlbum...';
-
-INSERT INTO Catalogo.ArtistaAlbum (Artista_idUsuario, Album_idAlbum, fechaPublicacion)
-VALUES
-(1, 1, '2018-09-21'),   -- Duki -> Super Sangre Joven
-(1, 2, '2021-11-05'),   -- Duki -> Desde el Fin del Mundo
-(2, 3, '2018-11-02'),   -- Rosalía -> El Mal Querer
-(2, 4, '2022-03-18'),   -- Rosalía -> MOTOMAMI
-(3, 5, '2013-09-09'),   -- Arctic Monkeys -> AM
-(3, 6, '2022-10-21'),   -- Arctic Monkeys -> The Car
-(4, 7, '2022-05-06'),   -- Bad Bunny -> Un Verano Sin Ti
-(4, 8, '2023-10-13'),   -- Bad Bunny -> nadie sabe...
-(5, 9, '2023-02-24'),   -- Karol G -> MAÑANA SERÁ BONITO
-(5,10, '2021-12-03');   -- Karol G -> Bichota Season
-
--- ============================================================
--- 11. CATALOGO.CANCION  (50 canciones, ~5 por álbum)
+-- 10. CATALOGO.CANCION  (50 canciones, ~5 por álbum)
 -- ============================================================
 PRINT '>>> Insertando Cancion...';
 
@@ -212,61 +194,61 @@ INSERT INTO Catalogo.Cancion
     (idCancion, nombreCancion, duracion, calidadKbps, numeroPista,
      totalReproducciones, estadoCancion, Album_idAlbum, fechaLanzamiento)
 VALUES
--- Album 1: Super Sangre Joven (Duki) — lanzamiento: 2018-09-21
+-- Album 1: Super Sangre Joven (Duki)
 (1,  'Rockstar',                 198, 320, 1, 85000000,  'activa', 1, '2018-09-21'),
 (2,  'Loca',                     204, 320, 2, 72000000,  'activa', 1, '2018-09-21'),
 (3,  'Set',                      186, 320, 3, 68000000,  'activa', 1, '2018-09-21'),
 (4,  'No Salgas',                192, 256, 4, 54000000,  'activa', 1, '2018-09-21'),
 (5,  'Mucho Más',                210, 320, 5, 61000000,  'activa', 1, '2018-09-21'),
--- Album 2: Desde el Fin del Mundo (Duki) — lanzamiento: 2021-11-05
+-- Album 2: Desde el Fin del Mundo (Duki)
 (6,  'She Don''t Give a Fo',    223, 320, 1, 120000000, 'activa', 2, '2021-11-05'),
 (7,  'Goteo',                    195, 320, 2, 95000000,  'activa', 2, '2021-11-05'),
 (8,  'Primer Tiempo',            241, 256, 3, 78000000,  'activa', 2, '2021-11-05'),
 (9,  'Luna Llena',               205, 320, 4, 83000000,  'activa', 2, '2021-11-05'),
 (10, 'Desde el Fin del Mundo',   268, 320, 5, 67000000,  'activa', 2, '2021-11-05'),
--- Album 3: El Mal Querer (Rosalía) — lanzamiento: 2018-11-02
+-- Album 3: El Mal Querer (Rosalía)
 (11, 'Malamente',                183, 320, 1, 95000000,  'activa', 3, '2018-11-02'),
 (12, 'Que No Salga la Luna',     214, 320, 2, 77000000,  'activa', 3, '2018-11-02'),
 (13, 'Pienso en Tu Mirá',        226, 256, 3, 110000000, 'activa', 3, '2018-11-02'),
 (14, 'De Aquí No Sales',         198, 320, 4, 68000000,  'activa', 3, '2018-11-02'),
 (15, 'Bagdad',                   391, 320, 5, 82000000,  'activa', 3, '2018-11-02'),
--- Album 4: MOTOMAMI (Rosalía) — lanzamiento: 2022-03-18
+-- Album 4: MOTOMAMI (Rosalía)
 (16, 'Saoko',                    156, 320, 1, 145000000, 'activa', 4, '2022-03-18'),
 (17, 'Candy',                    178, 320, 2, 132000000, 'activa', 4, '2022-03-18'),
 (18, 'Bizcochito',               136, 320, 3, 118000000, 'activa', 4, '2022-03-18'),
 (19, 'Chicken Teriyaki',         131, 256, 4, 98000000,  'activa', 4, '2022-03-18'),
 (20, 'Despechá',                 148, 320, 5, 178000000, 'activa', 4, '2022-03-18'),
--- Album 5: AM (Arctic Monkeys) — lanzamiento: 2013-09-09
+-- Album 5: AM (Arctic Monkeys)
 (21, 'Do I Wanna Know?',         341, 320, 1, 420000000, 'activa', 5, '2013-09-09'),
 (22, 'R U Mine?',                203, 320, 2, 310000000, 'activa', 5, '2013-09-09'),
 (23, 'One for the Road',         237, 320, 3, 185000000, 'activa', 5, '2013-09-09'),
 (24, 'Arabella',                 212, 256, 4, 172000000, 'activa', 5, '2013-09-09'),
 (25, 'Why''d You Only Call Me When You''re High?', 163, 320, 5, 290000000, 'activa', 5, '2013-09-09'),
--- Album 6: The Car (Arctic Monkeys) — lanzamiento: 2022-10-21
-(26, 'There''d Better Be a Mirrorball', 303, 320, 1, 88000000, 'activa', 6, '2022-10-21'),
-(27, 'I Ain''t Quite Where I Think I Am', 254, 320, 2, 71000000, 'activa', 6, '2022-10-21'),
-(28, 'Sculptures of Anything Goes', 237, 256, 3, 59000000, 'activa', 6, '2022-10-21'),
-(29, 'Body Paint',              340, 320, 4, 95000000,  'activa', 6, '2022-10-21'),
-(30, 'The Car',                  271, 320, 5, 67000000,  'activa', 6, '2022-10-21'),
--- Album 7: Un Verano Sin Ti (Bad Bunny) — lanzamiento: 2022-05-06
+-- Album 6: The Car (Arctic Monkeys)
+(26, 'There''d Better Be a Mirrorball',    303, 320, 1, 88000000,  'activa', 6, '2022-10-21'),
+(27, 'I Ain''t Quite Where I Think I Am', 254, 320, 2, 71000000,  'activa', 6, '2022-10-21'),
+(28, 'Sculptures of Anything Goes',        237, 256, 3, 59000000,  'activa', 6, '2022-10-21'),
+(29, 'Body Paint',                         340, 320, 4, 95000000,  'activa', 6, '2022-10-21'),
+(30, 'The Car',                            271, 320, 5, 67000000,  'activa', 6, '2022-10-21'),
+-- Album 7: Un Verano Sin Ti (Bad Bunny)
 (31, 'Moscow Mule',              355, 320, 1, 320000000, 'activa', 7, '2022-05-06'),
 (32, 'Tití Me Preguntó',         248, 320, 2, 390000000, 'activa', 7, '2022-05-06'),
 (33, 'Me Porto Bonito',          178, 320, 3, 430000000, 'activa', 7, '2022-05-06'),
 (34, 'Ojitos Lindos',            314, 256, 4, 280000000, 'activa', 7, '2022-05-06'),
 (35, 'Un Verano Sin Ti',         326, 320, 5, 215000000, 'activa', 7, '2022-05-06'),
--- Album 8: nadie sabe... (Bad Bunny) — lanzamiento: 2023-10-13
+-- Album 8: nadie sabe... (Bad Bunny)
 (36, 'EL APAGÓN',                476, 320, 1, 195000000, 'activa', 8, '2023-10-13'),
 (37, 'WHERE SHE GOES',           175, 320, 2, 340000000, 'activa', 8, '2023-10-13'),
 (38, 'COCO CHANEL',              217, 256, 3, 145000000, 'activa', 8, '2023-10-13'),
 (39, 'HIBIKI',                   254, 320, 4, 98000000,  'activa', 8, '2023-10-13'),
 (40, 'THUNDER Y LIGHTNING',      196, 320, 5, 112000000, 'activa', 8, '2023-10-13'),
--- Album 9: MAÑANA SERÁ BONITO (Karol G) — lanzamiento: 2023-02-24
+-- Album 9: MAÑANA SERÁ BONITO (Karol G)
 (41, 'PROVENZA',                 207, 320, 1, 285000000, 'activa', 9, '2023-02-24'),
 (42, 'TQG',                      186, 320, 2, 410000000, 'activa', 9, '2023-02-24'),
 (43, 'Cairo',                    210, 256, 3, 198000000, 'activa', 9, '2023-02-24'),
 (44, 'QLONA',                    185, 320, 4, 165000000, 'activa', 9, '2023-02-24'),
 (45, 'AMARGURA',                 228, 320, 5, 142000000, 'activa', 9, '2023-02-24'),
--- Album 10: Bichota Season (Karol G) — lanzamiento: 2021-12-03
+-- Album 10: Bichota Season (Karol G)
 (46, 'Bichota',                  194, 320, 1, 320000000, 'activa', 10, '2021-12-03'),
 (47, 'El Makinon',               218, 320, 2, 195000000, 'activa', 10, '2021-12-03'),
 (48, 'Ay Dios Mío',              185, 256, 3, 143000000, 'activa', 10, '2021-12-03'),
@@ -275,7 +257,7 @@ VALUES
 SET IDENTITY_INSERT Catalogo.Cancion OFF;
 
 -- ============================================================
--- 12. CATALOGO.CANCIONGENEROMUSICAL
+-- 11. CATALOGO.CANCIONGENEROMUSICAL
 -- ============================================================
 PRINT '>>> Insertando CancionGeneroMusical...';
 
@@ -298,7 +280,7 @@ VALUES
 (46,4),(46,10), (47,4), (48,4), (49,4), (50,4);
 
 -- ============================================================
--- 13. INDUSTRIA.CONTRATODISCOGRAFICA
+-- 12. INDUSTRIA.CONTRATODISCOGRAFICA
 -- ============================================================
 PRINT '>>> Insertando ContratoDiscografica...';
 
@@ -321,7 +303,7 @@ VALUES
 SET IDENTITY_INSERT Industria.ContratoDiscografica OFF;
 
 -- ============================================================
--- 14. BIBLIOTECA.PLAYLIST  (8 playlists)
+-- 13. BIBLIOTECA.PLAYLIST  (8 playlists)
 -- ============================================================
 PRINT '>>> Insertando Playlist...';
 
@@ -329,18 +311,18 @@ SET IDENTITY_INSERT Biblioteca.Playlist ON;
 INSERT INTO Biblioteca.Playlist
     (idPlaylist, nombrePlaylist, descripcionPlaylist, tipoVisibilidad, tipoPlaylist)
 VALUES
-(1, 'Mis Favoritas',              'Canciones favoritas de todos los tiempos',          'Publica',  'Personal'),
-(2, 'Workout Mix 2024',           'Playlist energética para el gimnasio',              'Publica',  'Personal'),
-(3, 'Tarde de Lluvia',            'Canciones tranquilas para días lluviosos',          'Privada',  'Personal'),
-(4, 'Fiesta Latina',              'Los mejores reggaetoneros para la fiesta',          'Publica',  'Colaborativa'),
-(5, 'Indie Vibes',                'Lo mejor del indie y rock alternativo',             'Publica',  'Personal'),
-(6, 'Top Hits Globales',          'Las canciones más escuchadas del mundo',            'Publica',  'Colaborativa'),
-(7, 'Estudio Profundo',           'Música instrumental y ambiental para estudiar',     'Privada',  'Personal'),
-(8, 'Trap en Español',            'Lo mejor del trap y rap en castellano',             'Publica',  'Personal');
+(1, 'Mis Favoritas',     'Canciones favoritas de todos los tiempos',         'Publica',  'Personal'),
+(2, 'Workout Mix 2024',  'Playlist energética para el gimnasio',             'Publica',  'Personal'),
+(3, 'Tarde de Lluvia',   'Canciones tranquilas para días lluviosos',         'Privada',  'Personal'),
+(4, 'Fiesta Latina',     'Los mejores reggaetoneros para la fiesta',         'Publica',  'Colaborativa'),
+(5, 'Indie Vibes',       'Lo mejor del indie y rock alternativo',            'Publica',  'Personal'),
+(6, 'Top Hits Globales', 'Las canciones más escuchadas del mundo',           'Publica',  'Colaborativa'),
+(7, 'Estudio Profundo',  'Música instrumental y ambiental para estudiar',    'Privada',  'Personal'),
+(8, 'Trap en Español',   'Lo mejor del trap y rap en castellano',            'Publica',  'Personal');
 SET IDENTITY_INSERT Biblioteca.Playlist OFF;
 
 -- ============================================================
--- 15. BIBLIOTECA.CANCIONPLAYLIST
+-- 14. BIBLIOTECA.CANCIONPLAYLIST
 -- ============================================================
 PRINT '>>> Insertando CancionPlaylist...';
 
@@ -370,7 +352,7 @@ VALUES
 (8,  9, 4, '2024-05-12'), (8, 36, 5, '2024-05-13');
 
 -- ============================================================
--- 16. BIBLIOTECA.USUARIOPLAYLIST
+-- 15. BIBLIOTECA.USUARIOPLAYLIST
 -- ============================================================
 PRINT '>>> Insertando UsuarioPlaylist...';
 
@@ -387,7 +369,7 @@ VALUES
 (16, 8, 'Creador'),    (18, 8, 'Colaborador');
 
 -- ============================================================
--- 17. BIBLIOTECA.USUARIOALBUM
+-- 16. BIBLIOTECA.USUARIOALBUM
 -- ============================================================
 PRINT '>>> Insertando UsuarioAlbum...';
 
@@ -408,7 +390,7 @@ VALUES
 (18, 7, '2024-06-01');
 
 -- ============================================================
--- 18. BIBLIOTECA.USUARIOCANCIONLIKE
+-- 17. BIBLIOTECA.USUARIOCANCIONLIKE
 -- ============================================================
 PRINT '>>> Insertando UsuarioCancionLike...';
 
@@ -431,7 +413,7 @@ VALUES
 (18, 32, '2024-06-01 22:00:00');
 
 -- ============================================================
--- 19. BIBLIOTECA.USUARIOSIGUEARTISTA
+-- 18. BIBLIOTECA.USUARIOSIGUEARTISTA
 -- ============================================================
 PRINT '>>> Insertando UsuarioSigueArtista...';
 
@@ -452,7 +434,7 @@ VALUES
 (18, 4, 'A');
 
 -- ============================================================
--- 20. PAGOS.SUSCRIPCION
+-- 19. PAGOS.SUSCRIPCION
 -- ============================================================
 PRINT '>>> Insertando Suscripcion...';
 
@@ -483,7 +465,7 @@ VALUES
 SET IDENTITY_INSERT Pagos.Suscripcion OFF;
 
 -- ============================================================
--- 21. PAGOS.PAGO
+-- 20. PAGOS.PAGO
 -- ============================================================
 PRINT '>>> Insertando Pago...';
 
@@ -500,10 +482,10 @@ VALUES
 (7,  7, 17.99, 'Tarjeta de credito', '2023-04-05', 'Completado'),
 (8,  8, 17.99, 'Tarjeta de credito', '2024-04-06', 'Completado'),
 (9,  9,  4.99, 'Paypal',             '2023-05-18', 'Completado'),
-(10, 9,  4.99, 'Paypal',             '2023-06-18', 'Fallido'),   -- intento fallido
+(10, 9,  4.99, 'Paypal',             '2023-06-18', 'Fallido'),
 (11,10,  9.99, 'Paypal',             '2024-05-19', 'Completado'),
 (12,11,  9.99, 'Tarjeta de credito', '2023-06-22', 'Completado'),
-(13,12,  0.01, 'Tarjeta de debito',  '2023-07-30', 'Completado'), -- plan free (monto > 0 requerido)
+(13,12,  0.01, 'Tarjeta de debito',  '2023-07-30', 'Completado'),
 (14,13,  9.99, 'Tarjeta de debito',  '2024-07-31', 'Completado'),
 (15,14,  4.99, 'Paypal',             '2023-08-14', 'Completado'),
 (16,15, 13.99, 'Tarjeta de credito', '2023-10-07', 'Completado'),
@@ -515,7 +497,7 @@ VALUES
 SET IDENTITY_INSERT Pagos.Pago OFF;
 
 -- ============================================================
--- 22. ANALITICA.REPRODUCCION  (100 registros)
+-- 21. ANALITICA.REPRODUCCION  (100 registros)
 -- ============================================================
 PRINT '>>> Insertando Reproduccion...';
 
@@ -524,7 +506,7 @@ INSERT INTO Analitica.Reproduccion
     (Usuario_idUsuario, Cancion_idCancion, idReproduccion,
      fechaHora, pais, duracionEscuchada, fueSaltada)
 VALUES
--- Usuario 6 (30 reproducciones)
+-- Usuario 6 (15 reproducciones)
 (6, 21, 1,  '2024-03-01 08:00:00', 'Ecuador',       341, 'N'),
 (6, 22, 2,  '2024-03-01 08:06:00', 'Ecuador',       203, 'N'),
 (6, 33, 3,  '2024-03-01 18:30:00', 'Ecuador',       178, 'N'),
@@ -540,7 +522,7 @@ VALUES
 (6,  6, 13, '2024-03-08 22:00:00', 'Ecuador',       223, 'N'),
 (6, 13, 14, '2024-03-09 15:00:00', 'Ecuador',       226, 'N'),
 (6, 32, 15, '2024-03-10 11:00:00', 'Ecuador',       248, 'N'),
--- Usuario 7 (20 reproducciones)
+-- Usuario 7 (10 reproducciones)
 (7, 13, 16, '2024-03-01 20:00:00', 'Ecuador',       226, 'N'),
 (7, 11, 17, '2024-03-02 09:30:00', 'Ecuador',       183, 'N'),
 (7, 16, 18, '2024-03-03 18:00:00', 'Ecuador',       156, 'N'),
@@ -551,7 +533,7 @@ VALUES
 (7, 19, 23, '2024-03-08 11:00:00', 'España',         60, 'S'),
 (7, 41, 24, '2024-03-09 10:00:00', 'Ecuador',       207, 'N'),
 (7, 44, 25, '2024-03-10 19:00:00', 'Ecuador',       185, 'N'),
--- Usuario 8 (15 reproducciones)
+-- Usuario 8 (10 reproducciones)
 (8, 31, 26, '2024-03-01 21:00:00', 'Colombia',      355, 'N'),
 (8, 32, 27, '2024-03-02 08:00:00', 'Colombia',      248, 'N'),
 (8, 33, 28, '2024-03-03 19:30:00', 'Colombia',      178, 'N'),
@@ -562,7 +544,7 @@ VALUES
 (8, 46, 33, '2024-03-08 12:00:00', 'Colombia',      194, 'N'),
 (8, 47, 34, '2024-03-09 11:00:00', 'Colombia',      218, 'N'),
 (8, 21, 35, '2024-03-10 18:00:00', 'Colombia',      341, 'N'),
--- Usuario 9 (15 reproducciones)
+-- Usuario 9 (8 reproducciones)
 (9, 41, 36, '2024-03-01 09:00:00', 'México',        207, 'N'),
 (9, 42, 37, '2024-03-02 10:00:00', 'México',        186, 'N'),
 (9, 43, 38, '2024-03-03 11:00:00', 'México',        210, 'N'),
@@ -571,7 +553,7 @@ VALUES
 (9, 33, 41, '2024-03-06 07:30:00', 'México',        178, 'N'),
 (9, 16, 42, '2024-03-07 22:00:00', 'México',         70, 'S'),
 (9, 31, 43, '2024-03-08 15:00:00', 'México',        355, 'N'),
--- Usuario 10 (10 reproducciones - Rock)
+-- Usuario 10 (7 reproducciones)
 (10, 21, 44, '2024-03-01 14:00:00', 'Perú',         341, 'N'),
 (10, 22, 45, '2024-03-02 15:00:00', 'Perú',         203, 'N'),
 (10, 23, 46, '2024-03-03 16:00:00', 'Perú',         237, 'N'),
@@ -579,14 +561,14 @@ VALUES
 (10, 25, 48, '2024-03-05 18:00:00', 'Perú',         163, 'N'),
 (10, 26, 49, '2024-03-06 19:00:00', 'Perú',         303, 'N'),
 (10, 27, 50, '2024-03-07 20:00:00', 'Perú',         254, 'N'),
--- Usuario 11 (10 reproducciones)
+-- Usuario 11 (6 reproducciones)
 (11, 21, 51, '2024-03-01 11:00:00', 'Chile',        341, 'N'),
 (11, 25, 52, '2024-03-02 12:00:00', 'Chile',        163, 'N'),
 (11, 26, 53, '2024-03-03 13:00:00', 'Chile',        303, 'N'),
 (11, 13, 54, '2024-03-04 14:00:00', 'Chile',        226, 'N'),
 (11, 15, 55, '2024-03-05 15:00:00', 'Chile',        391, 'N'),
 (11, 11, 56, '2024-03-06 16:00:00', 'Chile',        183, 'N'),
--- Reproducciones adicionales para cubrir más países y canciones
+-- Usuarios 12-18 variados
 (12,  1, 57, '2024-03-01 09:00:00', 'Venezuela',    198, 'N'),
 (12,  6, 58, '2024-03-02 10:00:00', 'Venezuela',    223, 'N'),
 (12,  7, 59, '2024-03-03 11:00:00', 'Venezuela',    195, 'N'),
@@ -606,7 +588,7 @@ VALUES
 (17, 46, 73, '2024-03-03 10:00:00', 'Uruguay',      194, 'N'),
 (18, 33, 74, '2024-03-01 22:00:00', 'Paraguay',     178, 'N'),
 (18, 34, 75, '2024-03-02 23:00:00', 'Paraguay',     314, 'N'),
--- Segunda ronda de reproducciones para probar historial y tendencias
+-- Segunda ronda (abril)
 (6,  33, 76, '2024-04-01 08:00:00', 'Ecuador',      178, 'N'),
 (6,  42, 77, '2024-04-02 09:00:00', 'Ecuador',      186, 'N'),
 (6,  21, 78, '2024-04-03 10:00:00', 'Ecuador',      341, 'N'),
@@ -620,7 +602,7 @@ VALUES
 (11, 25, 86, '2024-04-01 11:00:00', 'Chile',        163, 'N'),
 (12,  7, 87, '2024-04-01 09:00:00', 'Venezuela',    195, 'N'),
 (13, 42, 88, '2024-04-01 20:00:00', 'Argentina',    186, 'N'),
--- Mes mayo para probar reportes mensuales
+-- Mes mayo
 (6,  21, 89, '2024-05-05 08:00:00', 'Ecuador',      341, 'N'),
 (6,  33, 90, '2024-05-06 09:00:00', 'Ecuador',      178, 'N'),
 (7,  13, 91, '2024-05-05 20:00:00', 'Ecuador',      226, 'N'),
@@ -636,7 +618,7 @@ VALUES
 SET IDENTITY_INSERT Analitica.Reproduccion OFF;
 
 -- ============================================================
--- 23. ANALITICA.REGALIA  (registros mensuales por canción y país)
+-- 22. ANALITICA.REGALIA
 -- ============================================================
 PRINT '>>> Insertando Regalia...';
 
@@ -646,7 +628,7 @@ INSERT INTO Analitica.Regalia
      paisReproduccion, cantidadReproducciones,
      montoTotalGenerado, montoArtista, montoDiscografica)
 VALUES
--- Marzo 2024 - Canciones más escuchadas
+-- Marzo 2024
 (1,  21, 2024, 3, 'Ecuador',   4, 0.016, 0.006, 0.010),
 (2,  33, 2024, 3, 'Ecuador',   3, 0.012, 0.005, 0.007),
 (3,  42, 2024, 3, 'Ecuador',   3, 0.012, 0.004, 0.008),
@@ -677,7 +659,6 @@ VALUES
 SET IDENTITY_INSERT Analitica.Regalia OFF;
 
 -- ============================================================
-
 PRINT '';
 PRINT '====================================================';
 PRINT '  CARGA MASIVA COMPLETADA EXITOSAMENTE';
@@ -687,7 +668,10 @@ PRINT '  - 5  Planes de suscripcion';
 PRINT '  - 10 Generos musicales';
 PRINT '  - 5  Discograficas';
 PRINT '  - 20 Personas (5 artistas, 13 oyentes, 2 admins)';
-PRINT '  - 10 Albums';
+PRINT '  - 5  Artistas';
+PRINT '  - 13 Usuarios (oyentes)';
+PRINT '  - 2  Administradores';
+PRINT '  - 10 Albums (con artista principal incluido)';
 PRINT '  - 50 Canciones';
 PRINT '  - 10 Contratos discograficos';
 PRINT '  - 8  Playlists';
