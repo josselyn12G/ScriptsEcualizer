@@ -53,3 +53,7 @@ GO                                                          -- Ejecuta
 -- Caso 2: Usuario con plan pago
 SELECT Usuario.FN_UsuarioTienePlanPago(6) AS TienePlanPago; -- Esperado: 1
 GO                                                          -- Ejecuta
+
+-- Caso 3: Usuario con plan pago
+SELECT Usuario.FN_UsuarioTienePlanPago(12) AS TienePlanPago; -- Esperado: 0
+GO                                                          

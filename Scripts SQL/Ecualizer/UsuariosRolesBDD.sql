@@ -322,7 +322,7 @@ GO
 -- El sistema puede gestionar la biblioteca del usuario:
 -- playlists, canciones dentro de playlists, likes,
 -- álbumes guardados y artistas seguidos.
-GRANT SELECT, INSERT, UPDATE, DELETE
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE
 ON SCHEMA::Biblioteca TO RolSistema;
 GO
 
