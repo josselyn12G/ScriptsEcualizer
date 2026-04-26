@@ -26,7 +26,7 @@ BEGIN
         BEGIN TRANSACTION; -- Inicia transacción
 
         -- Insertar playlist
-        INSERT INTO Biblioteca.Playlist (nombrePlaylist, descripcion, tipoVisibilidad, tipoPlaylist, fechaCreacion)
+        INSERT INTO Biblioteca.Playlist (nombrePlaylist, descripcionPlaylist, tipoVisibilidad, tipoPlaylist, fechaCreacion)
         VALUES (@nombrePlaylist, @descripcion, @tipoVisibilidad, @tipoPlaylist, GETDATE());
 
         -- Obtener ID generado
@@ -57,3 +57,5 @@ EXEC Biblioteca.SP_CrearPlaylistUsuario
     @tipoVisibilidad = 'Privada',
     @tipoPlaylist = 'Personal';
 GO
+
+
