@@ -305,7 +305,8 @@ GO
 ------------------------------------------------------------
 -- PERMISOS PARA EL ROL: RolSistema
 ------------------------------------------------------------
-
+-- El sistema tiene permisos amplios ejecutar consulta
+GRANT EXECUTE ON SCHEMA::Usuario TO RolSistema;
 -- El sistema puede consultar el catálogo musical:
 -- álbumes, canciones, géneros, artistas y tipos de álbum.
 GRANT SELECT ON SCHEMA::Catalogo TO RolSistema;
@@ -321,14 +322,14 @@ GO
 -- El sistema puede gestionar la biblioteca del usuario:
 -- playlists, canciones dentro de playlists, likes,
 -- álbumes guardados y artistas seguidos.
-GRANT SELECT, INSERT, UPDATE, DELETE
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE
 ON SCHEMA::Biblioteca TO RolSistema;
 GO
 
 -- El sistema puede consultar planes, crear y actualizar suscripciones,
 -- y registrar pagos asociados.
 -- No se otorga DELETE para mantener trazabilidad financiera.
-GRANT SELECT, INSERT, UPDATE
+GRANT SELECT, INSERT, UPDATE, EXECUTE
 ON SCHEMA::Pagos TO RolSistema;
 GO
 

@@ -43,7 +43,7 @@ CREATE TYPE TipoEstado
     FROM VARCHAR(20) NOT NULL
 GO
 
--- Descripciones extensas (biografa, letras, etc.)
+-- Descripciones extensas (biografia, letras, etc.)
 CREATE TYPE TipoDescripcion
     FROM VARCHAR(MAX) NULL
 GO
@@ -67,7 +67,6 @@ GO
 CREATE TYPE TipoFlag
     FROM CHAR(1) NOT NULL
 GO
-
 
 -- Porcentajes
 CREATE TYPE TipoPorcentajes
@@ -111,10 +110,12 @@ ALTER TABLE Administrador
      ALLOW_PAGE_LOCKS = ON , 
      ALLOW_ROW_LOCKS = ON )
 GO
+
 -- ------------------------------------------------------------
 --                     Album
+-- Un álbum pertenece a un único artista principal (relación 1:N).
+-- La FK Artista_idUsuario identifica al artista dueño del álbum.
 -- ------------------------------------------------------------
--- Creación de la tabla Album: define los atributos idAlbum, tituloAlbum, fechaLanzamientoAlbum, descripcionAlbum, estadoAlbum y TipoAlbum_idTipoAlbum
 CREATE TABLE Album 
     (
      idAlbum INT IDENTITY(1,1) NOT NULL, -- Identificador único del álbum (clave primaria)
@@ -122,7 +123,8 @@ CREATE TABLE Album
      fechaLanzamientoAlbum DATE DEFAULT GETDATE() NOT NULL, -- Fecha de lanzamiento con valor por defecto (fecha actual)
      descripcionAlbum TipoDescripcion , -- Descripción opcional del álbum
      estadoAlbum TipoEstado , -- Estado del álbum
-     TipoAlbum_idTipoAlbum TINYINT NOT NULL -- Clave foránea que referencia al tipo de álbum
+     TipoAlbum_idTipoAlbum TINYINT NOT NULL, -- Clave foránea que referencia al tipo de álbum
+     Artista_idUsuario TipoID -- Clave foránea que referencia al artista principal del álbum
     )
 GO 
 
@@ -163,27 +165,6 @@ GO
 -- Restricción UNIQUE para asegurar que el nombreArtistico no se repita
 ALTER TABLE Artista 
     ADD CONSTRAINT Artista_nombreArtistico_UN UNIQUE NONCLUSTERED (nombreArtistico)
-GO
-
--- ------------------------------------------------------------
---               Artista - Publica - Album
--- ------------------------------------------------------------
-
--- Creación de la tabla ArtistaAlbum: tabla intermedia que relaciona artistas con álbumes (relación muchos a muchos)
-CREATE TABLE ArtistaAlbum 
-    (
-     Artista_idUsuario TipoID , -- Clave foránea que referencia al artista
-     Album_idAlbum TipoID, -- Clave foránea que referencia al álbum
-     fechaPublicacion DATE NOT NULL DEFAULT GETDATE()
-    )
-GO
-
--- Definición de la clave primaria compuesta para evitar duplicidad de relaciones artista-álbum
-ALTER TABLE ArtistaAlbum 
-    ADD CONSTRAINT ArtistaAlbum_PK PRIMARY KEY CLUSTERED (Artista_idUsuario, Album_idAlbum)
-     WITH (
-     ALLOW_PAGE_LOCKS = ON , 
-     ALLOW_ROW_LOCKS = ON )
 GO
 
 -- ------------------------------------------------------------
@@ -290,6 +271,7 @@ ALTER TABLE CancionPlaylist
      ALLOW_PAGE_LOCKS = ON , 
      ALLOW_ROW_LOCKS = ON )
 GO
+
 -- ------------------------------------------------------------
 --                 Contrato Discografica
 -- ------------------------------------------------------------
@@ -402,36 +384,117 @@ GO
 ALTER TABLE GeneroMusical 
     ADD CONSTRAINT GeneroMusical_nombreGenero_UN UNIQUE NONCLUSTERED (nombreGenero)
 GO
+
 -- ------------------------------------------------------------
---                         Usuario
+--                         Persona
+-- Contiene los datos de identidad civil del individuo.
+-- Es la tabla base (supertipo) de la jerarquía de herencia.
 -- ------------------------------------------------------------
--- Creación de la tabla Persona: define los atributos idUsuario, alias, paisPersona, fechaNacimiento, genero e idTipoPlan
 CREATE TABLE Persona 
     (
-     idUsuario TipoID , -- Identificador único de la persona (clave primaria)
-     alias VARCHAR (15) NOT NULL , -- Nombre o alias de la persona
-     paisUsuario TipoPais , -- País de la persona
-     fechaNacimiento DATE NOT NULL , -- Fecha de nacimiento de la persona
-     genero CHAR(1) NOT NULL , -- Género de la persona (F, M, O)
-     idTipoPlan SMALLINT NOT NULL -- Identificador del tipo de plan de la persona
+     idUsuario INT IDENTITY(1,1) NOT NULL , -- Identificador único de la persona (clave primaria)
+     cedulaUsuario CHAR (10) NOT NULL , -- Número de cédula de la persona
+     primerNombre TipoNombre , -- Primer nombre de la persona
+     segundoNombre TipoNombre NULL , -- Segundo nombre de la persona (opcional)
+     primerApellido TipoNombre , -- Primer apellido de la persona
+     segundoApellido TipoNombre NULL , -- Segundo apellido de la persona (opcional)
+     correo VARCHAR (150) NOT NULL , -- Correo electrónico de la persona
+     contrasena VARCHAR (255) NOT NULL , -- Contraseña de la persona
+     fechaRegistro DATE NOT NULL DEFAULT GETDATE() , -- Fecha en la que se registró la persona
+     estado TipoEstado DEFAULT 'activo' -- Estado actual de la persona en el sistema
     )
-GO 
-
--- Restricción CHECK para asegurar que la persona tenga al menos 13 años
-ALTER TABLE Persona 
-    ADD CONSTRAINT CHK_fechaNacimiento 
-    CHECK ( fechaNacimiento <= CAST(DATEADD(YEAR, -13, GETDATE()) AS DATE) ) 
 GO
 
--- Restricción CHECK para validar los valores permitidos en el género de la persona
+-- Restricción CHECK para asegurar que la cédula tenga exactamente 10 dígitos numéricos
 ALTER TABLE Persona 
-    ADD CONSTRAINT CHK_generoPersona
-    CHECK ( genero IN ('F', 'M', 'O') ) 
+    ADD CONSTRAINT CHK_cedulaPersona 
+    CHECK ( LEN(cedulaUsuario) = 10 AND cedulaUsuario NOT LIKE '%[^0-9]%' ) 
+GO
+
+-- Restricción CHECK para asegurar que el primer nombre tenga al menos 2 caracteres
+ALTER TABLE Persona 
+    ADD CONSTRAINT CHK_primerNombre 
+    CHECK ( LEN(LTRIM(primerNombre)) >= 2 ) 
+GO
+
+-- Restricción CHECK para asegurar que el primer apellido tenga al menos 2 caracteres
+ALTER TABLE Persona 
+    ADD CONSTRAINT CHK_primerApellido 
+    CHECK ( LEN(LTRIM(primerApellido)) >= 2 ) 
+GO
+
+-- Restricción CHECK para validar el formato del correo electrónico
+ALTER TABLE Persona 
+    ADD CONSTRAINT CHK_correoPersona 
+    CHECK ( correo LIKE '%_@_%._%' ) 
+GO
+
+-- Restricción CHECK para asegurar que la contraseña tenga al menos 8 caracteres
+ALTER TABLE Persona 
+    ADD CONSTRAINT CHK_contrasenaPersona 
+    CHECK ( LEN(contrasena) >= 8 ) 
+GO
+
+-- Restricción CHECK para asegurar que la fecha de registro no sea futura
+ALTER TABLE Persona 
+    ADD CONSTRAINT CHK_fechaRegistro 
+    CHECK ( fechaRegistro <= CAST(GETDATE() AS DATE) ) 
+GO
+
+-- Restricción CHECK para validar los valores permitidos en el estado
+ALTER TABLE Persona 
+    ADD CONSTRAINT CHK_estadoPersona 
+    CHECK ( estado IN ('activo', 'inactivo', 'suspendido') ) 
 GO
 
 -- Definición de la clave primaria para la tabla Persona sobre el atributo idUsuario
 ALTER TABLE Persona 
     ADD CONSTRAINT Persona_PK PRIMARY KEY CLUSTERED (idUsuario)
+     WITH (
+     ALLOW_PAGE_LOCKS = ON , 
+     ALLOW_ROW_LOCKS = ON )
+GO
+
+-- Restricción UNIQUE para asegurar que el correo no se repita
+ALTER TABLE Persona 
+    ADD CONSTRAINT Persona_correo_UN UNIQUE NONCLUSTERED (correo)
+GO
+
+-- Restricción UNIQUE para asegurar que la cédula no se repita
+ALTER TABLE Persona 
+    ADD CONSTRAINT Persona_cedulaUsuario_UN UNIQUE NONCLUSTERED (cedulaUsuario)
+GO
+
+-- ------------------------------------------------------------
+--                         Usuario
+-- Contiene el perfil del oyente dentro de la aplicación.
+-- Hereda de Persona (comparte el mismo idUsuario).
+-- ------------------------------------------------------------
+CREATE TABLE Usuario 
+    (
+     idUsuario TipoID , -- Identificador único del usuario (clave primaria, FK a Persona)
+     alias VARCHAR (15) NOT NULL , -- Nombre de usuario visible dentro de la aplicación
+     paisUsuario TipoPais , -- País del usuario
+     fechaNacimiento DATE NOT NULL , -- Fecha de nacimiento del usuario
+     genero CHAR(1) NOT NULL -- Género del usuario (F, M, O)
+    )
+GO
+
+-- Restricción CHECK para asegurar que el usuario tenga al menos 13 años
+ALTER TABLE Usuario 
+    ADD CONSTRAINT CHK_fechaNacimiento 
+    CHECK ( fechaNacimiento <= CAST(DATEADD(YEAR, -13, GETDATE()) AS DATE) ) 
+GO
+
+-- Restricción CHECK para validar los valores permitidos en el género del usuario
+ALTER TABLE Usuario 
+    ADD CONSTRAINT CHK_generoUsuario 
+    CHECK ( genero IN ('F', 'M', 'O') ) 
+GO
+
+-- Definición de la clave primaria para la tabla Usuario sobre el atributo idUsuario
+ALTER TABLE Usuario 
+    ADD CONSTRAINT Usuario_PK PRIMARY KEY CLUSTERED (idUsuario)
      WITH (
      ALLOW_PAGE_LOCKS = ON , 
      ALLOW_ROW_LOCKS = ON )
@@ -518,7 +581,7 @@ CREATE TABLE UsuarioSigueArtista
     (
      Usuario_idUsuario TipoID , -- Clave foránea que referencia al oyente
      Artista_idUsuario TipoID , -- Clave foránea que referencia al artista
-     fechaSeguimiento DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE) , -- Fecha en la que el oyente comenzó a follow al artista
+     fechaSeguimiento DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE) , -- Fecha en la que el oyente comenzó a seguir al artista
      notificacionesActivas TipoFlag DEFAULT 'A' -- Indica si las notificaciones están activas ('A') o desactivadas ('D')
     )
 GO 
@@ -551,8 +614,6 @@ CREATE TABLE Pago
      Suscripcion_idSuscripcion TipoID -- Clave foránea que referencia a la suscripción
     )
 GO 
-
-
 
 -- Restricción CHECK para asegurar que el monto del pago sea mayor a 0
 ALTER TABLE Pago 
@@ -614,6 +675,7 @@ ALTER TABLE Playlist
      ALLOW_PAGE_LOCKS = ON , 
      ALLOW_ROW_LOCKS = ON )
 GO
+
 -- ------------------------------------------------------------
 --                        Regalia 
 -- ------------------------------------------------------------
@@ -660,7 +722,7 @@ GO
 -- Restricción CHECK para validar que el mes esté entre 1 y 12
 ALTER TABLE Regalia 
     ADD CONSTRAINT CHK_mesPeriodo 
-    CHECK ( mesPeriodo>= 1 AND mesPeriodo <= 12 ) 
+    CHECK ( mesPeriodo >= 1 AND mesPeriodo <= 12 ) 
 GO
 
 -- Restricción CHECK para validar que el año esté en un rango válido (desde 2000 hasta el año actual)
@@ -676,6 +738,7 @@ ALTER TABLE Regalia
      ALLOW_PAGE_LOCKS = ON , 
      ALLOW_ROW_LOCKS = ON )
 GO
+
 -- ------------------------------------------------------------
 --                        Reproduccion 
 -- ------------------------------------------------------------
@@ -711,10 +774,11 @@ ALTER TABLE Reproduccion
      ALLOW_PAGE_LOCKS = ON , 
      ALLOW_ROW_LOCKS = ON )
 GO
+
 -- ------------------------------------------------------------
 --                        Suscripcion 
 -- ------------------------------------------------------------
--- Creación de la tabla Suscripcion: define los atributos idSuscripcion, fechaInicio, fechaFin, estadoSuscripcion, renovacionAutomatica, Oyente_idUsuario y TipoPlan_idTipoPlan
+-- Creación de la tabla Suscripcion: define los atributos idSuscripcion, fechaInicio, fechaFin, estadoSuscripcion, renovacionAutomatica, Usuario_idUsuario y TipoPlan_idTipoPlan
 CREATE TABLE Suscripcion 
     (
      idSuscripcion INT IDENTITY(1,1) NOT NULL , -- Identificador único de la suscripción (clave primaria)
@@ -771,6 +835,7 @@ GO
 ALTER TABLE TipoAlbum 
     ADD CONSTRAINT TipoAlbum_nombreTipo_UN UNIQUE NONCLUSTERED (nombreTipo)
 GO
+
 -- ------------------------------------------------------------
 --                        TipoPlan 
 -- ------------------------------------------------------------
@@ -811,89 +876,11 @@ ALTER TABLE TipoPlan
     ADD CONSTRAINT TipoPlan_nombrePlan_UN UNIQUE NONCLUSTERED (nombrePlan)
 GO
 
--- ------------------------------------------------------------
---                        Usuario 
--- ------------------------------------------------------------
--- Creación de la tabla Usuario: define los atributos idUsuario, cedulaUsuario, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, contrasena, fechaRegistro y estado
-CREATE TABLE Usuario 
-    (
-     idUsuario INT IDENTITY(1,1) NOT NULL , -- Identificador único del usuario (clave primaria)
-     cedulaUsuario CHAR (10) NOT NULL , -- Número de cédula del usuario
-     primerNombre TipoNombre , -- Primer nombre del usuario
-     segundoNombre TipoNombre NULL , -- Segundo nombre del usuario (opcional)
-     primerApellido TipoNombre , -- Primer apellido del usuario
-     segundoApellido TipoNombre NULL , -- Segundo apellido del usuario (opcional)
-     correo VARCHAR (150) NOT NULL , -- Correo electrónico del usuario
-     contrasena VARCHAR (255) NOT NULL , -- Contraseña del usuario
-     fechaRegistro DATE NOT NULL DEFAULT GETDATE() , -- Fecha en la que se registr� el usuario
-     estado TipoEstado DEFAULT 'activo' -- Estado actual del usuario
-    )
-GO 
-
--- Restricción CHECK para asegurar que la cédula tenga exactamente 10 dígitos numéricos
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_cedulaUsuario 
-    CHECK ( LEN(cedulaUsuario) = 10 AND cedulaUsuario NOT LIKE '%[^0-9]%' ) 
-GO
-
--- Restricción CHECK para asegurar que el primer nombre tenga al menos 2 caracteres
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_primerNombre 
-    CHECK ( LEN(LTRIM(primerNombre)) >= 2 ) 
-GO
-
--- Restricción CHECK para asegurar que el primer apellido tenga al menos 2 caracteres
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_primerApellido 
-    CHECK ( LEN(LTRIM(primerApellido)) >= 2 ) 
-GO
-
--- Restricción CHECK para validar el formato del correo electrónico
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_correoUsuario 
-    CHECK ( correo LIKE '%_@_%._%' ) 
-GO
-
--- Restricción CHECK para asegurar que la contraseña tenga al menos 8 caracteres
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_contrasenaUsuario 
-    CHECK ( LEN(contrasena) >= 8 ) 
-GO
-
--- Restricción CHECK para asegurar que la fecha de registro no sea futura
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_fechaRegistro 
-    CHECK ( fechaRegistro <= CAST(GETDATE() AS DATE) ) 
-GO
-
--- Restricción CHECK para validar los valores permitidos en el estado del usuario
-ALTER TABLE Usuario 
-    ADD CONSTRAINT CHK_estadoUsuario 
-    CHECK ( estado IN ('activo', 'inactivo', 'suspendido') ) 
-GO
-
--- Definición de la clave primaria para la tabla Usuario sobre el atributo idUsuario
-ALTER TABLE Usuario 
-    ADD CONSTRAINT Usuario_PK PRIMARY KEY CLUSTERED (idUsuario)
-     WITH (
-     ALLOW_PAGE_LOCKS = ON , 
-     ALLOW_ROW_LOCKS = ON )
-GO
-
--- Restricción UNIQUE para asegurar que el correo no se repita
-ALTER TABLE Usuario 
-    ADD CONSTRAINT Usuario_correo_UN UNIQUE NONCLUSTERED (correo)
-GO
-
--- Restricción UNIQUE para asegurar que la cédula no se repita
-ALTER TABLE Usuario 
-    ADD CONSTRAINT Usuario_cedulaUsuario_UN UNIQUE NONCLUSTERED (cedulaUsuario)
-GO
-
 
 -- ==============================================================
 --                       FOREIGN KEYS
 -- ==============================================================
+
 -- Relación de herencia entre Administrador y Persona: cada administrador debe existir como persona registrada
 ALTER TABLE Administrador 
     ADD CONSTRAINT Administrador_Persona_FK FOREIGN KEY 
@@ -922,13 +909,13 @@ ALTER TABLE Album
     ON UPDATE NO ACTION 
 GO
 
--- Relación de herencia entre Artista y Persona: cada artista debe estar registrado como persona
-ALTER TABLE Artista 
-    ADD CONSTRAINT Artista_Persona_FK FOREIGN KEY 
+-- Relación 1:N entre Artista y Album: cada álbum pertenece a un único artista principal
+ALTER TABLE Album 
+    ADD CONSTRAINT Album_Artista_FK FOREIGN KEY 
     ( 
-     idUsuario
+     Artista_idUsuario
     ) 
-    REFERENCES Persona 
+    REFERENCES Artista 
     ( 
      idUsuario 
     ) 
@@ -936,27 +923,13 @@ ALTER TABLE Artista
     ON UPDATE NO ACTION 
 GO
 
--- Relación entre ArtistaAlbum y Album: cada registro debe estar asociado a un álbum existente
-ALTER TABLE ArtistaAlbum 
-    ADD CONSTRAINT ArtistaAlbum_Album_FK FOREIGN KEY 
+-- Relación de herencia entre Artista y Persona: cada artista debe estar registrado como persona
+ALTER TABLE Artista 
+    ADD CONSTRAINT Artista_Persona_FK FOREIGN KEY 
     ( 
-     Album_idAlbum
+     idUsuario
     ) 
-    REFERENCES Album 
-    ( 
-     idAlbum 
-    ) 
-    ON DELETE NO ACTION 
-    ON UPDATE NO ACTION 
-GO
-
--- Relación entre ArtistaAlbum y Artista: cada registro debe estar asociado a un artista existente
-ALTER TABLE ArtistaAlbum 
-    ADD CONSTRAINT ArtistaAlbum_Artista_FK FOREIGN KEY 
-    ( 
-     Artista_idUsuario
-    ) 
-    REFERENCES Artista 
+    REFERENCES Persona 
     ( 
      idUsuario 
     ) 
@@ -1020,7 +993,6 @@ ALTER TABLE CancionPlaylist
     ON UPDATE NO ACTION 
 GO
 
-
 -- Relación entre CancionPlaylist y Playlist: cada canción en una playlist debe estar asociada a una playlist existente
 ALTER TABLE CancionPlaylist 
     ADD CONSTRAINT CancionPlaylist_Playlist_FK FOREIGN KEY 
@@ -1063,7 +1035,7 @@ ALTER TABLE ContratoDiscografica
     ON UPDATE NO ACTION 
 GO
 
--- Relación de herencia entre Usuario y Persona: cada usuario debe existir como persona registrada
+-- Relación de herencia entre Usuario y Persona: cada usuario (oyente) debe existir como persona registrada
 ALTER TABLE Usuario 
     ADD CONSTRAINT Usuario_Persona_FK FOREIGN KEY 
     ( 
@@ -1132,6 +1104,7 @@ ALTER TABLE UsuarioCancionLike
     ON DELETE NO ACTION 
     ON UPDATE NO ACTION 
 GO
+
 -- Relación entre UsuarioPlaylist y Usuario: cada relación oyente-playlist debe estar asociada a un oyente existente
 ALTER TABLE UsuarioPlaylist 
     ADD CONSTRAINT UsuarioPlaylist_Usuario_FK FOREIGN KEY 
@@ -1280,29 +1253,26 @@ GO
 -- ESQUEMA: Usuario
 -- Agrupa la gestión de identidades y roles dentro del sistema
 -- Tablas incluidas:
--- - Persona (datos generales de las personas)
+-- - Persona (datos de identidad civil: cédula, nombres, correo, contraseña)
 -- - Administrador (roles administrativos del sistema)
 -- - Artista (usuarios que crean contenido musical)
--- - Usuario (usuarios consumidores de música)
+-- - Usuario (oyentes: alias, país, fecha de nacimiento, género)
 -- ============================================================
 CREATE SCHEMA Usuario
 GO
-
 
 -- ============================================================
 -- ESQUEMA: Catalogo
 -- Agrupa la información musical principal del sistema
 -- Tablas incluidas:
--- - Album (información de álbumes)
+-- - Album (información de álbumes; incluye FK al artista principal)
 -- - TipoAlbum (clasificación de álbumes)
 -- - Cancion (detalle de canciones)
 -- - GeneroMusical (géneros musicales)
 -- - CancionGeneroMusical (relación canción - género)
--- - ArtistaAlbum (relación artista - álbum)
 -- ============================================================
 CREATE SCHEMA Catalogo
 GO
-
 
 -- ============================================================
 -- ESQUEMA: Biblioteca
@@ -1313,11 +1283,10 @@ GO
 -- - UsuarioPlaylist (relación oyente crea playlist)
 -- - UsuarioCancionLike (likes de canciones)
 -- - UsuarioSigueArtista (seguimiento de artistas)
--- - UsuarioAlbum (album guardados)
+-- - UsuarioAlbum (albums guardados)
 -- ============================================================
 CREATE SCHEMA Biblioteca
 GO
-
 
 -- ============================================================
 -- ESQUEMA: Pagos
@@ -1330,7 +1299,6 @@ GO
 CREATE SCHEMA Pagos
 GO
 
-
 -- ============================================================
 -- ESQUEMA: Analitica
 -- Agrupa la información de consumo y generación de ingresos
@@ -1340,7 +1308,6 @@ GO
 -- ============================================================
 CREATE SCHEMA Analitica
 GO
-
 
 -- ============================================================
 -- ESQUEMA: Industria
@@ -1369,9 +1336,7 @@ ALTER SCHEMA Catalogo TRANSFER dbo.TipoAlbum;
 ALTER SCHEMA Catalogo TRANSFER dbo.Cancion;
 ALTER SCHEMA Catalogo TRANSFER dbo.GeneroMusical;
 ALTER SCHEMA Catalogo TRANSFER dbo.CancionGeneroMusical;
-ALTER SCHEMA Catalogo TRANSFER dbo.ArtistaAlbum;
 GO
-
 
 -- Esquema Biblioteca
 ALTER SCHEMA Biblioteca TRANSFER dbo.Playlist;
@@ -1399,12 +1364,11 @@ ALTER SCHEMA Industria TRANSFER dbo.ContratoDiscografica;
 GO
 
 
-
 -- Informe de Resumen de Oracle SQL Developer Data Modeler: 
 -- 
--- CREATE TABLE                            23
+-- CREATE TABLE                            22
 -- CREATE INDEX                             0
--- ALTER TABLE                            103
+-- ALTER TABLE                            101
 -- CREATE VIEW                              0
 -- ALTER VIEW                               0
 -- CREATE PACKAGE                           0

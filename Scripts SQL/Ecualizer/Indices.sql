@@ -33,6 +33,11 @@ ON Catalogo.Album (
 );
 GO
 
+-- Índice para consultar álbumes por artista.
+-- Permite mostrar el catálogo completo de un artista específico.
+CREATE NONCLUSTERED INDEX IDX_Album_Artista
+ON Catalogo.Album (Artista_idUsuario);
+GO
 
 ------------------------------------------------------------
 -- ÍNDICES PARA LA TABLA: Catalogo.Cancion
@@ -228,13 +233,12 @@ GO
 -- Visualizar índices existentes
 EXEC sp_helpindex 'Pagos.Suscripcion'
 
--- Índice para validar si un usuario ya tiene una suscripción activa, cancelada o vencida.
 -- Se relaciona con la regla de negocio: un usuario solo puede tener una suscripción activa a la vez.
-CREATE NONCLUSTERED INDEX IDX_Suscripcion_Usuario_Estado
+CREATE UNIQUE NONCLUSTERED INDEX UQ_Suscripcion_Usuario_Activa
 ON Pagos.Suscripcion (
-    Usuario_idUsuario,
-    estadoSuscripcion
-);
+    Usuario_idUsuario
+)
+WHERE estadoSuscripcion = 'activa';
 GO
 
 -- Índice para verificar suscripciones vencidas o próximas a vencer.
@@ -282,15 +286,15 @@ GO
 
 
 ------------------------------------------------------------
--- ÍNDICES PARA LA TABLA: Usuario.Usuario
+-- ÍNDICES PARA LA TABLA: Usuario.Persona
 ------------------------------------------------------------
 -- Visualizar índices existentes
-EXEC sp_helpindex 'Usuario.Usuario'
+EXEC sp_helpindex 'Usuario.Persona'
 
 -- Índice para consultar usuarios activos, inactivos o suspendidos.
 -- Apoya la gestión administrativa de cuentas.
-CREATE NONCLUSTERED INDEX IDX_Usuario_Estado
-ON Usuario.Usuario (
+CREATE NONCLUSTERED INDEX IDX_Persona_Estado
+ON Usuario.Persona (
     estado
 );
 GO
