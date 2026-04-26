@@ -228,13 +228,12 @@ GO
 -- Visualizar índices existentes
 EXEC sp_helpindex 'Pagos.Suscripcion'
 
--- Índice para validar si un usuario ya tiene una suscripción activa, cancelada o vencida.
 -- Se relaciona con la regla de negocio: un usuario solo puede tener una suscripción activa a la vez.
-CREATE NONCLUSTERED INDEX IDX_Suscripcion_Usuario_Estado
+CREATE UNIQUE NONCLUSTERED INDEX UQ_Suscripcion_Usuario_Activa
 ON Pagos.Suscripcion (
-    Usuario_idUsuario,
-    estadoSuscripcion
-);
+    Usuario_idUsuario
+)
+WHERE estadoSuscripcion = 'Activa';
 GO
 
 -- Índice para verificar suscripciones vencidas o próximas a vencer.
