@@ -51,7 +51,9 @@ def main():
 
     # Casos de prueba
     evaluar_usuario(cursor, 6)    # Usuario con plan esperado
-    evaluar_usuario(cursor, 9)   # Otro usuario
+    evaluar_usuario(cursor, 20)   # Usuario no existe
+    evaluar_usuario(cursor, 12)   # Usuario sin plan o plan Free
+
 
     cursor.close()                # Cierra cursor
     conexion.close()              # Cierra conexión
