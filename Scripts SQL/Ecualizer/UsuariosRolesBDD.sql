@@ -373,3 +373,43 @@ GO
 -- Este permiso solo debe otorgarse al administrador técnico de la base de datos.
 ALTER ROLE db_owner ADD MEMBER user_AdminDB;
 GO
+
+-- ====================================================
+--       Verificación de Usuarios, Roles y Permisos
+-- ====================================================
+-- Verificar logins creados en el servidor
+SELECT name, type_desc, is_disabled
+FROM sys.server_principals
+WHERE name LIKE 'login_%';
+GO
+
+-- Verificar usuarios en la base de datos Ecualizer
+SELECT name, type_desc, default_schema_name
+FROM sys.database_principals
+WHERE type IN ('S','U')
+  AND name LIKE 'user_%';
+GO
+
+-- Verificar membresía de usuarios en roles
+SELECT
+    r.name  AS Rol,
+    m.name  AS Usuario
+FROM sys.database_role_members  rm
+JOIN sys.database_principals    r ON rm.role_principal_id   = r.principal_id
+JOIN sys.database_principals    m ON rm.member_principal_id = m.principal_id
+WHERE r.name IN ('RolOyente','RolArtista','RolAdministrador','RolReportes')
+ORDER BY r.name;
+GO
+
+-- Verificar permisos otorgados por esquema
+SELECT
+    pr.name         AS Rol,
+    pe.state_desc   AS Accion,
+    pe.permission_name,
+    sch.name        AS Esquema
+FROM sys.database_permissions pe
+JOIN sys.database_principals  pr  ON pe.grantee_principal_id = pr.principal_id
+JOIN sys.schemas              sch ON pe.major_id             = sch.schema_id
+WHERE pe.class = 3
+ORDER BY pr.name, sch.name;
+GO
