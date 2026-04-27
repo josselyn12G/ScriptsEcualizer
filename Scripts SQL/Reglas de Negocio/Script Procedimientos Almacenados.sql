@@ -76,12 +76,12 @@ BEGIN
     BEGIN TRY -- Inicia el control de errores.
         BEGIN TRANSACTION; -- Inicia la transacción.
 
-        -- Vence suscripciones activas expiradas sin pago Completado.
+        -- Vence suscripciones expiradas sin pago Completado.
         UPDATE S
             SET S.estadoSuscripcion = 'inactiva' -- Cambia la suscripción vencida a inactiva.
         OUTPUT inserted.Usuario_idUsuario INTO @UsuariosAfectados -- Registra los usuarios afectados.
         FROM Pagos.Suscripcion S -- Tabla principal de suscripciones.
-        WHERE S.estadoSuscripcion = 'activa' -- Considera solo suscripciones activas.
+        WHERE S.estadoSuscripcion IN ('activa', 'inactiva', 'cancelada') -- Considera suscripciones activas, inactivas y canceladas.
           AND S.fechaFin <= CAST(GETDATE() AS DATE) -- Valida que la suscripción esté vencida.
           AND NOT EXISTS ( -- Verifica que no exista pago completado.
                 SELECT 1
