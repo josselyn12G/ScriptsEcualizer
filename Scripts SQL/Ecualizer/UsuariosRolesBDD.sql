@@ -8,7 +8,7 @@ GO
 -- Este login será utilizado por el perfil técnico encargado de administrar
 -- la base de datos a nivel estructural y de seguridad.
 CREATE LOGIN login_AdminDB
-    WITH PASSWORD = 'Admin@Ecualizer2026!',
+    WITH PASSWORD = 'Admin@Sistema2026!',
     CHECK_POLICY = ON,
     CHECK_EXPIRATION = ON;
 GO
@@ -42,7 +42,7 @@ GO
 -- Este login representa al usuario funcional que administra procesos
 -- dentro del sistema Ecualizer, no la base de datos como tal.
 CREATE LOGIN login_Administrador
-    WITH PASSWORD = 'Admin@Sistema2025!',
+    WITH PASSWORD = 'Admin@Ecualizer2026!',
     CHECK_POLICY = ON,
     CHECK_EXPIRATION = ON;
 GO
@@ -293,7 +293,7 @@ ON SCHEMA::Pagos TO RolAdministrador;
 GO
 
 -- Gestión de información analítica.
-GRANT SELECT, INSERT, UPDATE, DELETE 
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE 
 ON SCHEMA::Analitica TO RolAdministrador;
 GO
 

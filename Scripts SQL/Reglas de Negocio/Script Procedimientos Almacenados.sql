@@ -357,3 +357,222 @@ SELECT -- Verifica el contador final de reproducciones.
 FROM Catalogo.Cancion
 WHERE idCancion IN (21, 33);
 GO
+
+------------------------------------------------------------
+-- PROCEDIMIENTO 4: Analitica.SP_CerrarFacturacionMensual
+-- OBJETIVO: Consolidar reproducciones del mes anterior por canción
+-- y país, aplicar porcentaje del contrato vigente y generar
+-- registros en Analitica.Regalia.
+-- Ejecutado: día 1 de cada mes por RolSistema.
+------------------------------------------------------------
+CREATE OR ALTER PROCEDURE Analitica.SP_CerrarFacturacionMensual
+WITH EXECUTE AS 'user_Sistema'
+AS
+BEGIN
+    SET NOCOUNT ON; -- Evita mensajes de filas afectadas.
+
+    DECLARE @mesPeriodo  TINYINT  = MONTH(DATEADD(MONTH, -1, GETDATE())); -- Mes anterior.
+    DECLARE @anioPeriodo SMALLINT = YEAR(DATEADD(MONTH, -1, GETDATE()));  -- Año del mes anterior.
+    DECLARE @tarifaPorReproduccion DECIMAL(12,6) = 0.004;                 -- Tarifa base por reproducción.
+
+    BEGIN TRY
+        BEGIN TRANSACTION; -- Inicia la transacción.
+
+        -- --------------------------------------------------------
+        -- VALIDACION: Evita procesar un período ya cerrado.
+        -- --------------------------------------------------------
+        IF EXISTS (
+            SELECT 1
+            FROM Analitica.Regalia
+            WHERE mesPeriodo  = @mesPeriodo
+              AND anioPeriodo = @anioPeriodo
+        )
+        BEGIN
+            RAISERROR('Ya existen registros de regalía para el período %d/%d. El cierre no puede ejecutarse dos veces.', 16, 1, @mesPeriodo, @anioPeriodo);
+            ROLLBACK TRANSACTION; -- Revierte si ya existe el período.
+            RETURN;
+        END
+
+        -- --------------------------------------------------------
+        -- INSERT principal:
+        -- Ruta del JOIN:
+        -- Reproduccion → Cancion → Album (tiene Artista_idUsuario como FK directa)
+        --             → ContratoDiscografica (LEFT JOIN, puede ser independiente)
+        -- --------------------------------------------------------
+        INSERT INTO Analitica.Regalia
+            (Cancion_idCancion,
+             cantidadReproducciones,
+             montoTotalGenerado,
+             montoArtista,
+             montoDiscografica,
+             paisReproduccion,
+             mesPeriodo,
+             anioPeriodo)
+        SELECT
+            R.Cancion_idCancion,                                                        -- ID de la canción reproducida.
+            COUNT(*)                                      AS cantidadReproducciones,    -- Total de reproducciones agrupadas.
+            COUNT(*) * @tarifaPorReproduccion             AS montoTotalGenerado,        -- Monto bruto = reproducciones * tarifa.
+            COUNT(*) * @tarifaPorReproduccion
+                * (ISNULL(CD.porcentajeArtista, 100) / 100.0)    AS montoArtista,      -- 100% si artista es independiente.
+            COUNT(*) * @tarifaPorReproduccion
+                * (ISNULL(CD.porcentajeDiscografica, 0) / 100.0) AS montoDiscografica, -- 0% si artista es independiente.
+            R.pais                                        AS paisReproduccion,          -- País de la reproducción.
+            @mesPeriodo                                   AS mesPeriodo,                -- Mes del período.
+            @anioPeriodo                                  AS anioPeriodo                -- Año del período.
+        FROM Analitica.Reproduccion R
+        -- Une reproducción con canción para obtener el álbum.
+        JOIN Catalogo.Cancion C
+            ON C.idCancion      = R.Cancion_idCancion
+        -- Une canción con álbum. Album tiene Artista_idUsuario como FK directa.
+        JOIN Catalogo.Album AL
+            ON AL.idAlbum       = C.Album_idAlbum
+        -- LEFT JOIN con contrato activo del artista dueño del álbum.
+        -- LEFT porque el artista puede ser independiente sin contrato.
+        LEFT JOIN Industria.ContratoDiscografica CD
+            ON  CD.Artista_idUsuario = AL.Artista_idUsuario      -- FK directa en Album.
+            AND CD.estadoContrato    = 'Activo'                   -- Solo contratos activos.
+            AND CD.fechaInicio      <= CAST(GETDATE() AS DATE)    -- Contrato ya iniciado.
+            AND (CD.fechaFin IS NULL
+                 OR CD.fechaFin     >= CAST(GETDATE() AS DATE))   -- Contrato no vencido.
+        -- Filtra solo reproducciones del mes anterior.
+        WHERE MONTH(R.fechaHora) = @mesPeriodo
+          AND YEAR(R.fechaHora)  = @anioPeriodo
+        -- Agrupa por canción, país y porcentajes del contrato.
+        GROUP BY
+            R.Cancion_idCancion,
+            R.pais,
+            CD.porcentajeArtista,
+            CD.porcentajeDiscografica;
+
+        COMMIT TRANSACTION; -- Confirma todos los registros generados.
+
+        -- Retorna resumen del cierre ejecutado.
+        SELECT
+            @mesPeriodo                     AS MesProcesado,          -- Mes procesado.
+            @anioPeriodo                    AS AnioProcesado,         -- Año procesado.
+            COUNT(*)                        AS TotalRegistros,        -- Registros generados.
+            SUM(cantidadReproducciones)     AS TotalReproducciones,   -- Total reproducciones consolidadas.
+            SUM(montoTotalGenerado)         AS MontoTotalGenerado,    -- Monto bruto total.
+            SUM(montoArtista)               AS MontoTotalArtistas,    -- Monto total artistas.
+            SUM(montoDiscografica)          AS MontoTotalDiscograficas -- Monto total discográficas.
+        FROM Analitica.Regalia
+        WHERE mesPeriodo  = @mesPeriodo
+          AND anioPeriodo = @anioPeriodo;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0        -- Verifica si hay transacción activa.
+            ROLLBACK TRANSACTION; -- Revierte si ocurrió un error.
+        THROW;                    -- Relanza el error original.
+    END CATCH
+END;
+GO
+
+
+
+-- ============================================================
+-- PRUEBAS
+-- ============================================================
+USE Ecualizer;
+GO
+
+-- --------------------------------------------------------
+-- LIMPIEZA PREVIA: Elimina regalías del período de prueba.
+-- --------------------------------------------------------
+DELETE FROM Analitica.Regalia
+WHERE mesPeriodo  = 3
+  AND anioPeriodo = 2026;
+GO
+
+-- --------------------------------------------------------
+-- PREPARACION: Reproducciones de marzo 2026.
+-- --------------------------------------------------------
+INSERT INTO Analitica.Reproduccion
+    (Usuario_idUsuario, Cancion_idCancion,
+     fechaHora, pais, duracionEscuchada, fueSaltada)
+VALUES
+-- Usuario 6 reproduce canción 21 (Do I Wanna Know - Arctic Monkeys) desde Ecuador.
+(6,  21, '2026-03-10 08:00:00', 'Ecuador',   341, 'N'),
+-- Usuario 7 reproduce canción 21 desde Ecuador.
+(7,  21, '2026-03-11 09:00:00', 'Ecuador',   300, 'N'),
+-- Usuario 6 reproduce canción 21 desde Ecuador por tercera vez.
+(6,  21, '2026-03-20 14:00:00', 'Ecuador',   341, 'N'),
+-- Usuario 8 reproduce canción 33 (Me Porto Bonito - Bad Bunny) desde Colombia.
+(8,  33, '2026-03-12 10:00:00', 'Colombia',  178, 'N'),
+-- Usuario 9 reproduce canción 33 desde Colombia.
+(9,  33, '2026-03-13 11:00:00', 'Colombia',  150, 'N'),
+-- Usuario 10 reproduce canción 42 (TQG - Karol G) desde Perú.
+(10, 42, '2026-03-14 12:00:00', 'Perú',      186, 'N'),
+-- Usuario 11 reproduce canción 42 desde Perú.
+(11, 42, '2026-03-15 13:00:00', 'Perú',      186, 'N'),
+-- Usuario 12 reproduce canción 1 (Rockstar - Duki) desde Venezuela.
+(12,  1, '2026-03-22 15:00:00', 'Venezuela', 198, 'N'),
+-- Usuario 13 reproduce canción 1 desde Venezuela con salto.
+(13,  1, '2026-03-25 16:00:00', 'Venezuela', 100, 'S');
+GO
+
+-- --------------------------------------------------------
+-- VERIFICACION PREVIA: Reproducciones a consolidar.
+-- Esperado: canción 21 Ecuador x3, canción 33 Colombia x2,
+-- canción 42 Perú x2, canción 1 Venezuela x2.
+-- --------------------------------------------------------
+SELECT
+    R.Cancion_idCancion,                   -- ID de la canción.
+    C.nombreCancion,                        -- Nombre de la canción.
+    AL.Artista_idUsuario,                  -- Artista dueño del álbum.
+    R.pais,                                -- País de reproducción.
+    COUNT(*) AS totalReproducciones        -- Total agrupado.
+FROM Analitica.Reproduccion R
+JOIN Catalogo.Cancion       C  ON C.idCancion  = R.Cancion_idCancion
+JOIN Catalogo.Album         AL ON AL.idAlbum   = C.Album_idAlbum
+WHERE MONTH(R.fechaHora) = 3
+  AND YEAR(R.fechaHora)  = 2026
+GROUP BY R.Cancion_idCancion, C.nombreCancion,
+         AL.Artista_idUsuario, R.pais
+ORDER BY totalReproducciones DESC;
+GO
+
+-- --------------------------------------------------------
+-- PRUEBA 1: Ejecución exitosa del cierre mensual.
+-- Resultado esperado: 4 registros en Analitica.Regalia
+-- con montos calculados según porcentajes de contrato.
+-- --------------------------------------------------------
+EXEC Analitica.SP_CerrarFacturacionMensual;
+GO
+
+-- --------------------------------------------------------
+-- PRUEBA 2: Ejecución duplicada del mismo período.
+-- Resultado esperado: error indicando período ya procesado.
+-- --------------------------------------------------------
+EXEC Analitica.SP_CerrarFacturacionMensual;
+GO
+
+-- --------------------------------------------------------
+-- VERIFICACION FINAL: Registros generados en Analitica.Regalia.
+-- Esperado: 4 filas con montos desglosados por artista
+-- y discográfica según porcentajes del contrato activo.
+-- --------------------------------------------------------
+SELECT
+    RG.idRegalia,                                        -- ID del registro de regalía.
+    C.nombreCancion,                                      -- Nombre de la canción.
+    A.nombreArtistico,                                    -- Nombre artístico del artista.
+    ISNULL(D.nombreDiscografica,
+           'Independiente')  AS discografica,             -- Discográfica o Independiente.
+    RG.paisReproduccion,                                  -- País de las reproducciones.
+    RG.cantidadReproducciones,                            -- Total de reproducciones.
+    RG.montoTotalGenerado,                                -- Monto bruto generado.
+    RG.montoArtista,                                      -- Monto para el artista.
+    RG.montoDiscografica,                                 -- Monto para la discográfica.
+    RG.mesPeriodo,                                        -- Mes del período cerrado.
+    RG.anioPeriodo                                        -- Año del período cerrado.
+FROM Analitica.Regalia                    RG
+JOIN Catalogo.Cancion                     C  ON C.idCancion          = RG.Cancion_idCancion
+JOIN Catalogo.Album                       AL ON AL.idAlbum           = C.Album_idAlbum
+JOIN Usuario.Artista                      A  ON A.idUsuario          = AL.Artista_idUsuario
+LEFT JOIN Industria.ContratoDiscografica  CD ON CD.Artista_idUsuario = AL.Artista_idUsuario
+                                            AND CD.estadoContrato    = 'Activo'
+LEFT JOIN Industria.Discografica          D  ON D.idDiscografica     = CD.Discografica_idDiscografica
+WHERE RG.mesPeriodo  = 3                                  -- Filtra el mes de prueba.
+  AND RG.anioPeriodo = 2026                               -- Filtra el año de prueba.
+ORDER BY RG.cantidadReproducciones DESC;                  -- Ordena por mayor volumen.
+GO
