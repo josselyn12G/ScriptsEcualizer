@@ -248,10 +248,7 @@ GO
 GRANT INSERT, UPDATE 
 ON Catalogo.Cancion TO RolArtista;
 GO
--- El artista puede asociar sus álbumes.
-GRANT SELECT, INSERT 
-ON Catalogo.ArtistaAlbum TO RolArtista;
-GO
+
 -- El artista puede asociar y corregir géneros musicales de sus canciones.
 GRANT SELECT, INSERT, DELETE
 ON Catalogo.CancionGeneroMusical TO RolArtista;
